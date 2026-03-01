@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת הפקת מסמכים מקצועית</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Assistant', sans-serif; background-color: #f0f2f5; }
+        .document-area { width: 210mm; min-height: 297mm; padding: 20mm; margin: auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        @media (max-width: 768px) {
+            .document-area { width: 95%; padding: 10px; min-height: auto; }
+            .no-print { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body class="py-10">
+
+    <div class="max-w-4xl mx-auto mb-6 no-print flex justify-center gap-3 px-4">
+        <button onclick="changeDoc('חשבון עסקה', 'blue')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">חשבון עסקה</button>
+        <button onclick="changeDoc('חשבונית מס / קבלה', 'emerald')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-emerald-700 transition">חשבונית מס / קבלה</button>
+        <button onclick="downloadImage()" class="bg-orange-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-orange-600 transition flex items-center gap-2">
+            📥 שמור כקובץ לנייד
+        </button>
+    </div>
+
+    <div id="capture-area" class="document-area rounded-sm relative">
+        
+        <div id="accent-bar" class="absolute top-0 left-0 right-0 h-2 bg-blue-600"></div>
+
+        <div class="flex justify-between items-start mb-12 pt-4">
+            <div>
+                <input type="text" placeholder="שם העסק / אמא" class="text-3xl font-black text-gray-800 block outline-none border-b border-transparent hover:border-gray-200 w-full mb-1">
+                <div class="space-y-1 text-gray-500 text-sm">
+                    <input type="text" placeholder="ח.פ / עוסק מורשה: 00000000" class="block w-full outline-none">
+                    <input type="text" placeholder="כתובת: רחוב, עיר" class="block w-full outline-none">
+                    <input type="text" placeholder="טלפון: 050-0000000" class="block w-full outline-none">
+                </div>
+            </div>
+            <div class="text-left">
+                <h1 id="main-title" class="text-3xl font-bold text-blue-600 tracking-tight">חשבון עסקה</h1>
+                <div class="mt-4 text-sm text-gray-600">
+                    <p>תאריך: <input type="text" id="current-date" class="w-24 outline-none font-bold"></p>
+                    <p>מספר מסמך: <input type="text" value="1001" class="w-16 outline-none font-bold text-left"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg mb-10 border-r-4 border-gray-300">
+            <span class="text-xs text-gray-400 block mb-1">לכבוד:</span>
+            <input type="text" placeholder="שם הלקוח / שם החברה" class="text-xl font-bold block w-full bg-transparent outline-none">
+            <input type="text" placeholder="כתובת הלקוח או ח.פ" class="text-sm text-gray-500 block w-full bg-transparent outline-none">
+        </div>
+
+        <table class="w-full mb-10 text-right">
+            <thead>
+                <tr class="text-gray-400 border-b-2 border-gray-100 text-sm">
+                    <th class="pb-3 font-medium">תיאור השירות</th>
+                    <th class="pb-3 font-medium text-center">שעות</th>
+                    <th class="pb-3 font-medium text-center">תעריף</th>
+                    <th class="pb-3 font-medium text-left">סה"כ</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700">
+                <tr class="border-b border-gray-50">
+                    <td class="py-5"><input type="text" value="ייעוץ וליווי מקצועי" class="w-full font-semibold outline-none"></td>
+                    <td class="py-5 text-center"><input type="number" id="h" value="10" oninput="calc()" class="w-12 text-center outline-none bg-blue-50 rounded"></td>
+                    <td class="py-5 text-center"><input type="number" id="r" value="200" oninput="calc()" class="w-16 text-center outline-none bg-blue-50 rounded"> ₪</td>
+                    <td class="py-5 text-left font-bold text-gray-900"><span id="row-res">2,000</span> ₪</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="flex justify-end mb-20">
+            <div class="w-72 space-y-3">
+                <div class="flex justify-between text-gray-600">
+                    <span>סכום ביניים:</span>
+                    <span id="sub">2,000 ₪</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>מע"מ (17%):</span>
+                    <span id="tax">340 ₪</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t-2 border-gray-900 text-2xl font-black text-gray-900">
+                    <span>סה"כ לתשלום:</span>
+                    <span id="grand" class="text-blue-700">2,340 ₪</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-8 border-t border-dashed pt-8">
+            <div>
+                <h4 class="font-bold text-gray-800 mb-2">פרטי העברה:</h4>
+                <div class="text-sm text-gray-500 space-y-1">
+                    <p>בנק: <input type="text" placeholder="שם הבנק" class="outline-none"></p>
+                    <p>סניף: <input type="text" placeholder="000" class="outline-none"></p>
+                    <p>חשבון: <input type="text" placeholder="000000" class="outline-none"></p>
+                </div>
+            </div>
+            <div class="text-left self-end">
+                <div class="inline-block border-b border-black w-40 mb-1"></div>
+                <p class="text-xs text-gray-400">חתימה וחותמת</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // תאריך של היום אוטומטי
+        document.getElementById('current-date').value = new Date().toLocaleDateString('he-IL');
+
+        function calc() {
+            const h = parseFloat(document.getElementById('h').value) || 0;
+            const r = parseFloat(document.getElementById('r').value) || 0;
+            const subtotal = h * r;
+            const vat = subtotal * 0.17;
+            const total = subtotal + vat;
+
+            document.getElementById('row-res').innerText = subtotal.toLocaleString();
+            document.getElementById('sub').innerText = subtotal.toLocaleString() + ' ₪';
+            document.getElementById('tax').innerText = Math.round(vat).toLocaleString() + ' ₪';
+            document.getElementById('grand').innerText = Math.round(total).toLocaleString() + ' ₪';
+        }
+
+        function changeDoc(name, color) {
+            document.getElementById('main-title').innerText = name;
+            const titleColor = color === 'blue' ? 'text-blue-600' : 'text-emerald-600';
+            const bgColor = color === 'blue' ? 'bg-blue-600' : 'bg-emerald-600';
+            
+            document.getElementById('main-title').className = `text-3xl font-bold ${titleColor} tracking-tight`;
+            document.getElementById('accent-bar').className = `absolute top-0 left-0 right-0 h-2 ${bgColor}`;
+            document.getElementById('grand').className = `text-2xl font-black ${titleColor}`;
+        }
+
+        async function downloadImage() {
+            const btn = event.currentTarget;
+            btn.innerText = "מעבד...";
+            const area = document.getElementById('capture-area');
+            
+            // שימוש בספרייה ליצירת תמונה מה-HTML
+            const canvas = await html2canvas(area, { scale: 2 });
+            const link = document.createElement('a');
+            link.download = `מסמך_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            btn.innerHTML = "📥 שמור כקובץ לנייד";
+        }
+    </script>
+</body>
+</html>
